@@ -84,7 +84,7 @@
       border-radius: 100px;
       border: 2px solid transparent;
       box-shadow: 0 0 20px 2px rgba(0,0,0,0.06);
-      transition: background 0.12s, box-shadow 0.12s, border-color 0.12s;
+      transition: background 100ms ease-out, box-shadow 100ms ease-out, border-color 100ms ease-out;
       overflow: hidden;
       cursor: text;
     }
@@ -184,7 +184,7 @@
       border: none; outline: none;
       cursor: pointer; user-select: none; flex-shrink: 0;
       font-family: 'Nunito Sans', sans-serif;
-      transition: background 0.12s, box-shadow 0.12s;
+      transition: background 150ms ease-in, box-shadow 150ms ease-in;
     }
     /* hover: bg grigio, label scuro */
     .cer-chip:hover:not(.active) {
@@ -250,7 +250,7 @@
       gap: 12px;
       padding-bottom: 16px;
       cursor: pointer; user-select: none;
-      transition: border-color 0.12s, box-shadow 0.12s;
+      transition: border-color 150ms linear, box-shadow 150ms linear;
       overflow: hidden;
     }
     /* hover unselected: spread 2, alpha 0.06 */
@@ -859,10 +859,13 @@ function clearSearch() {
   const inp = document.getElementById('searchInput');
   let fromMouse = false;
 
-  // Click → active (subito, prima del focus)
+  // Click → active + forza focus sull'input (anche se l'utente ha cliccato sull'icona o sullo spazio)
   sb.addEventListener('mousedown', () => {
     fromMouse = true;
     sb.classList.add('is-active');
+  });
+  sb.addEventListener('click', () => {
+    inp.focus();
   });
 
   // Focus: se arriva da tab → kb-focus; se da mouse o programmatico → niente
