@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pop up filtri data</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #06653e;
+      --dark:  #001b10;
+      --mid:   #596963;
+      --light: #6f7c77;
+      --border: #9ca4a1;
+      --surface-alt: #f7f7f7;
+      --font: 'Nunito Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #cdd8d0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    /* ── POPUP ── */
+    .popup {
+      background: #fff;
+      width: 698px;
+      height: 662px;
+      flex-shrink: 0;          /* non restringere mai sotto 698px */
+      border-radius: 20px;
+      padding: 24px;
+      box-sizing: border-box;
+      box-shadow: 0 0 20px 2px rgba(0,27,16,.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── HEADING ── */
+    .heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .heading-left { display: flex; align-items: center; gap: 8px; }
+    .heading-title { font-size: 19px; font-weight: 700; line-height: 26px; color: var(--dark); }
+
+    .btn-icon {
+      width: 40px; height: 40px;
+      border-radius: 100px; border: none; background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .btn-icon:hover { background: rgba(0,0,0,.06); }
+
+    /* ── SECTION ── */
+    .section-label {
+      font-size: 14px; font-weight: 700;
+      line-height: 16px; letter-spacing: .28px;
+      color: var(--light); margin-bottom: 0;
+    }
+
+    /* ── SEGMENTED CONTROL ── */
+    .segmented-ctrl {
+      display: inline-flex; align-items: center; gap: 24px;
+      height: 60px; background: #fff;
+      border-radius: 100px; padding: 8px 16px;
+      box-shadow: 0 0 20px 2px rgba(0,0,0,.06);
+    }
+    .seg-btn {
+      height: 40px; padding: 8px 16px;
+      border-radius: 100px; border: none;
+      font-family: var(--font); font-size: 14px; font-weight: 500; line-height: 14px;
+      cursor: pointer; transition: all .15s;
+      white-space: nowrap;
+    }
+    .seg-btn.on  { background: var(--green); color: #fff; }
+    .seg-btn.off { background: transparent; color: var(--mid); }
+
+    /* ── DATE FIELDS ── */
+    .field-group { display: flex; flex-direction: column; gap: 10px; }
+    .field-label {
+      font-size: 14px; font-weight: 700;
+      line-height: 16px; letter-spacing: .28px;
+      color: var(--dark); height: 24px;
+      display: flex; align-items: center;
+    }
+    .field-subtext { font-size: 14px; font-weight: 400; line-height: 20px; color: var(--light); }
+    .date-field {
+      width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 2px 2px 2px 12px;
+      background: #fff; cursor: pointer;
+      transition: background .15s, border-color .15s, box-shadow .15s;
+    }
+    .date-field:hover:not(.focused) {
+      background: #e6e9e8;
+      box-shadow: 0 0 10px rgba(0,0,0,.05);
+    }
+    .date-field.focused { border-color: var(--green); box-shadow: 0 0 10px rgba(0,0,0,.05); }
+    .date-field-text {
+      flex: 1;
+      font-size: 14px; font-weight: 400; line-height: 20px;
+      color: var(--dark); user-select: none;
+    }
+    .date-field-text.empty { color: #b0b8b5; }
+    .post-tab {
+      display: flex; align-items: center; gap: 2px;
+      height: 32px;
+      padding: 0 6px 0 12px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      color: var(--green); /* icona sempre verde primary */
+      cursor: pointer;
+      transition: background .15s, color .15s, padding-left .1s;
+    }
+
+    .chevron { display: block; transition: transform .25s ease; }
+
+    /* ── TIME ── */
+    .time-row { display: flex; align-items: flex-start; gap: 20px; }
+    .time-field { width: 298px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+    .time-input-wrap {
+      display: flex; align-items: center;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; background: #fff;
+      transition: background .15s, border-color .15s, box-shadow .15s;
+      cursor: text;
+    }
+    .time-input-wrap:hover {
+      background: #e6e9e8;
+      box-shadow: 0 0 10px rgba(0,0,0,.05);
+    }
+    .time-input-wrap:focus-within {
+      border-color: var(--green);
+      box-shadow: 0 0 10px rgba(0,0,0,.05);
+      background: #fff;
+    }
+    .time-input-wrap.error { border-color: #c0392b !important; }
+    .field-subtext.error   { color: #c0392b; }
+    .time-seg {
+      display: inline-flex; align-items: center; position: relative;
+    }
+    .time-seg::before {
+      content: '|';
+      color: var(--green);
+      font-size: 15px; line-height: 20px; font-weight: 300;
+      position: absolute; left: -3px; /* prima del testo, non occupa spazio nel layout */
+      opacity: 0; pointer-events: none;
+    }
+    .time-seg:focus-within::before {
+      animation: timeBlink .9s step-start infinite;
+    }
+    @keyframes timeBlink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+    .time-part {
+      width: 2ch; border: none; outline: none;
+      font-family: var(--font); font-size: 14px; font-weight: 400; line-height: 20px;
+      color: var(--dark); background: transparent;
+      text-align: center; padding: 0; caret-color: transparent;
+    }
+    .time-colon {
+      font-size: 14px; font-weight: 400; line-height: 20px;
+      color: var(--dark); user-select: none;
+    }
+    .time-dash {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 51px; /* label 24px + gap 10px + metà input 18px − metà SVG 1px */
+      color: var(--border);
+    }
+
+    /* ── CHIPS ── */
+    .chips-row { display: flex; align-items: center; gap: 16px; flex-wrap: nowrap; overflow: hidden; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface-alt);
+      border-radius: 100px; padding: 10px 14px;
+    }
+    .chip-text { font-size: 14px; font-weight: 400; line-height: 20px; color: var(--dark); white-space: nowrap; }
+    .chip-sep { width: 1px; height: 19px; background: var(--border); flex-shrink: 0; }
+    .chip-arrow { flex-shrink: 0; display: flex; align-items: center; }
+
+    /* ── CTA ── */
+    .cta { display: flex; align-items: center; justify-content: flex-end; gap: 24px; }
+    .btn-secondary {
+      height: 36px; padding: 0 16px;
+      border-radius: 100px; border: none; background: #fff;
+      box-shadow: 0 0 20px 2px rgba(0,0,0,.06);
+      font-family: var(--font); font-size: 14px; font-weight: 700; line-height: 14px;
+      color: var(--green); cursor: pointer; transition: box-shadow .15s;
+    }
+    .btn-secondary:hover { background: #e6e9e8; }
+    .btn-primary {
+      height: 36px; padding: 8px 16px;
+      border-radius: 100px; border: none; background: var(--green);
+      box-shadow: 0 0 20px 0 rgba(0,0,0,.05);
+      font-family: var(--font); font-size: 14px; font-weight: 700; line-height: 14px;
+      color: #fff; cursor: pointer; transition: background .15s;
+    }
+    .btn-primary:hover { background: #054f30; }
+
+    /* ── YEAR PICKER ── */
+    .year-container {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      width: 100%; position: relative; min-height: 0;
+      display: none;
+    }
+    .year-grid {
+      position: absolute; left: 24px; right: 24px; top: 8px;
+      display: flex; flex-direction: column;
+      padding-bottom: 8px;
+    }
+    .year-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; height: 52px; align-items: center;
+    }
+    .year-btn {
+      justify-self: center;
+      width: 72px; height: 36px;
+      border-radius: 100px; border: none; background: transparent;
+      font-family: var(--font); font-size: 14px; font-weight: 400; line-height: 20px;
+      color: var(--dark); cursor: pointer; text-align: center;
+      transition: background .15s;
+    }
+    .year-btn:hover:not(.selected) { background: rgba(0,0,0,.05); }
+    .year-btn.selected {
+      background: var(--green); color: #fff;
+      font-weight: 700; line-height: 14px;
+    }
+    .year-arrow { transition: transform .2s; display: block; }
+    .cal-month-btn.year-open .year-arrow { transform: rotate(180deg); }
+    .cal-footer.year-mode { position: relative; }
+    .cal-footer.year-mode::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 1px; background: #cac4d0;
+    }
+
+    /* ── CALENDAR DROPDOWN ── */
+    .cal-dropdown {
+      position: absolute;
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 0 20px 2px rgba(0,0,0,.08);
+      width: 360px;
+      height: 394px;
+      z-index: 100; display: none;
+      overflow: hidden;
+      flex-direction: column;
+    }
+    /* nav row: 360×52px */
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px; padding: 0 12px 0 16px; flex-shrink: 0;
+    }
+    .cal-month-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 4px 10px 8px;
+      border-radius: 100px; border: none; background: transparent;
+      cursor: pointer;
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      line-height: 16px; letter-spacing: .28px;
+      color: var(--dark);
+      transition: background .15s;
+    }
+    .cal-month-btn:hover { background: rgba(0,0,0,.05); }
+    .cal-nav { display: flex; }
+    .cal-nav-btn {
+      width: 48px; height: 48px;
+      border: none; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+    }
+    .cal-nav-btn-inner {
+      width: 40px; height: 40px;
+      border-radius: 100px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .cal-nav-btn:hover .cal-nav-btn-inner { background: rgba(0,0,0,.05); }
+
+    /* grid: inner 336px (12px padding each side), rows 48px */
+    .cal-grid { padding: 0 12px; display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
+    .cal-row { display: flex; width: 100%; height: 48px; }
+    .cal-head-cell {
+      /* 336px / 7 = 48px each */
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 400; color: var(--dark);
+    }
+    /* cell 48×48, button 40×40 centred with 4px gap */
+    .cal-cell { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .cal-day {
+      width: 40px; height: 40px;
+      border-radius: 100px; border: none; background: transparent;
+      font-family: var(--font); font-size: 16px; font-weight: 400; color: var(--dark);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .1s, color .1s;
+    }
+    .cal-day.future { color: #c4ccc9; pointer-events: none; cursor: default; }
+    .cal-day:hover:not(.empty):not(.selected):not(.future) { background: rgba(6,101,62,.08); }
+    .cal-day.selected {
+      background: var(--green) !important; color: #fff;
+      font-weight: 700; font-size: 14px; border-radius: 100px !important;
+    }
+    .cal-day.range-mid { background: rgba(6,101,62,.12); border-radius: 0; }
+    .cal-day.range-start { background: var(--green); color: #fff; font-weight: 700; font-size: 14px; border-radius: 100px 0 0 100px; }
+    .cal-day.range-end   { background: var(--green); color: #fff; font-weight: 700; font-size: 14px; border-radius: 0 100px 100px 0; }
+    .cal-day.empty { pointer-events: none; visibility: hidden; }
+
+    /* footer: 360×54px */
+    .cal-footer {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 8px; height: 54px; padding: 0 12px; flex-shrink: 0;
+    }
+    .cal-action-btn {
+      height: 48px; padding: 8px 16px;
+      border-radius: 100px; border: none; background: transparent;
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      color: var(--green); cursor: pointer; transition: background .15s;
+    }
+    .cal-action-btn:hover { background: rgba(6,101,62,.06); }
+
+    /* ── SNACKBAR ── */
+    .snackbar {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      width: 698px; height: 68px; flex-shrink: 0;
+      background: #001b10;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px 0 rgba(0,27,16,.2);
+      display: flex; align-items: center; gap: 20px;
+      padding: 0 16px 0 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s, transform .22s;
+    }
+    .snackbar.show {
+      opacity: 1; pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    .snackbar-text {
+      flex: 1;
+      color: #fff;
+      font-family: var(--font); font-size: 16px; font-weight: 400; line-height: 27px;
+      white-space: nowrap;
+    }
+.snackbar-close {
+      width: 40px; height: 40px; flex-shrink: 0;
+      border-radius: 100px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent;
+      cursor: pointer; padding: 10px;
+      transition: background .15s;
+    }
+    .snackbar-close:hover { background: rgba(255,255,255,.12); }
+  </style>
+</head>
+<body>
+
+<div class="popup" id="popup">
+
+  <!-- HEADING -->
+  <div class="heading">
+    <div class="heading-left">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="2.5" y="3.75" width="15" height="13.333" rx="1.5" stroke="#001b10" stroke-width="1.25"/>
+        <path d="M2.5 7.5h15M6.667 1.667v3.333M13.333 1.667v3.333" stroke="#001b10" stroke-width="1.25" stroke-linecap="round"/>
+      </svg>
+      <span class="heading-title">Cambia periodo</span>
+    </div>
+    <button class="btn-icon" title="Chiudi popup">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M18 6L6 18M6 6l12 12" stroke="#001b10" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- DATA -->
+  <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start;width:650px">
+    <div class="section-label">DATA</div>
+    <div class="segmented-ctrl">
+      <button class="seg-btn on"  id="btn-singolo"    onclick="setMode('singolo')">Giorno singolo</button>
+      <button class="seg-btn off" id="btn-intervallo" onclick="setMode('intervallo')">Periodo</button>
+    </div>
+    <div id="date-fields"></div>
+  </div>
+
+  <!-- FASCIA ORARIA -->
+  <div style="display:flex;flex-direction:column;gap:20px;align-items:flex-start;width:100%">
+    <div class="section-label">FASCIA ORARIA</div>
+    <div class="time-row">
+      <div class="time-field">
+        <div class="field-label">Dalle</div>
+        <div class="time-input-wrap">
+          <span class="time-seg"><input class="time-part" id="time-from-h" type="text" inputmode="numeric" maxlength="2" value="00" autocomplete="off"></span>
+          <span class="time-colon">:</span>
+          <span class="time-seg"><input class="time-part" id="time-from-m" type="text" inputmode="numeric" maxlength="2" value="00" autocomplete="off"></span>
+        </div>
+        <p class="field-subtext">Formato hh:mm</p>
+      </div>
+      <div class="time-dash">
+        <svg width="14" height="2" viewBox="0 0 14 2"><line x1="0" y1="1" x2="14" y2="1" stroke="#9ca4a1" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="time-field">
+        <div class="field-label">alle</div>
+        <div class="time-input-wrap">
+          <span class="time-seg"><input class="time-part" id="time-to-h" type="text" inputmode="numeric" maxlength="2" value="23" autocomplete="off"></span>
+          <span class="time-colon">:</span>
+          <span class="time-seg"><input class="time-part" id="time-to-m" type="text" inputmode="numeric" maxlength="2" value="59" autocomplete="off"></span>
+        </div>
+        <p class="field-subtext">Formato hh:mm</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIEPILOGO -->
+  <div style="display:flex;flex-direction:column;gap:24px;align-items:flex-start;width:100%">
+    <div class="section-label">RIEPILOGO</div>
+    <div class="chips-row" id="riepilogo"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <button class="btn-secondary" onclick="resetAll()">Azzera</button>
+    <button class="btn-primary"   onclick="salva()">Salva</button>
+  </div>
+
+  <!-- CALENDAR DROPDOWN — absolute inside popup; popup has no overflow:hidden so it shows freely -->
+  <div class="cal-dropdown" id="cal">
+    <div class="cal-header">
+      <button class="cal-month-btn" id="cal-month-btn" onclick="toggleYearPicker()">
+        <span id="cal-label"></span>
+        <svg class="year-arrow" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 11.25L5.25 7.5H12.75L9 11.25Z" fill="#06653E"/>
+        </svg>
+      </button>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="shiftMonth(-1)" title="Mese precedente">
+          <span class="cal-nav-btn-inner">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="#001b10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+        <button class="cal-nav-btn" onclick="shiftMonth(1)" title="Mese successivo">
+          <span class="cal-nav-btn-inner">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="#001b10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+    <div class="year-container" id="year-container">
+      <div class="year-grid" id="year-grid"></div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-footer" id="cal-footer">
+      <button class="cal-action-btn" onclick="cancelCal()">Chiudi</button>
+      <button class="cal-action-btn" onclick="confirmCal()">Conferma</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="snackbar" id="snackbar">
+  <span class="snackbar-text" id="snackbar-text"></span>
+<button class="snackbar-close" onclick="hideSnackbar()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M18 6L6 18M6 6l12 12" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+</div>
+
+<script>
+/* ─── STATE ─── */
+let mode          = 'singolo';
+let sel           = null;   // singolo date
+let start         = null;   // range start
+let end           = null;   // range end
+let openCal       = null;   // 'first' | 'second' | null
+let tempSel       = null;   // tentative selection in calendar
+let yearPickerOpen = false; // year picker overlay
+let calYear, calMonth;
+
+const MONTHS     = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                    'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const SHORT_MON  = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+// Baseline: il giorno già attivo nella dashboard (= oggi all'apertura)
+const _n  = new Date();
+const TODAY = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate());
+const DEFAULT_FROM = '00:00';
+const DEFAULT_TO   = '23:59';
+
+/* ─── INIT ─── */
+(function init() {
+  calYear  = TODAY.getFullYear();
+  calMonth = TODAY.getMonth();
+  // Singolo: oggi di default
+  sel   = new Date(TODAY);
+  // Intervallo (precaricato): ieri → oggi
+  end   = new Date(TODAY);
+  start = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - 1);
+  renderFields();
+  updateSummary();
+})();
+
+/* ─── MODE ─── */
+function setMode(m) {
+  if (m === 'intervallo' && mode === 'singolo') {
+    // Eredita il giorno singolo come data d'arrivo; ieri come partenza
+    end   = sel ? new Date(sel) : new Date();
+    start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
+  } else if (m === 'singolo' && mode === 'intervallo') {
+    // Torna al singolo: usa la data d'arrivo dell'intervallo
+    sel = end ? new Date(end) : new Date();
+  }
+  mode = m;
+  closeCal();
+  document.getElementById('btn-singolo').className    = 'seg-btn ' + (m === 'singolo'    ? 'on' : 'off');
+  document.getElementById('btn-intervallo').className = 'seg-btn ' + (m === 'intervallo' ? 'on' : 'off');
+  renderFields();
+  updateSummary();
+}
+
+/* ─── RENDER FIELDS ─── */
+function renderFields() {
+  const c = document.getElementById('date-fields');
+  if (mode === 'singolo') {
+    c.innerHTML =
+      '<div style="display:flex;align-items:flex-start;width:650px">' +
+        '<div style="width:298px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">' +
+          '<div class="field-label">Il</div>' +
+          dateFieldHTML('df1', sel, openCal === 'first') +
+        '</div>' +
+      '</div>';
+  } else {
+    const arrowSVG =
+      '<div style="width:13px;flex-shrink:0;display:flex;align-items:center;padding-top:46px">' +
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none">' +
+          '<path d="M1 7h12M8 2l5 5-5 5" stroke="#9ca4a1" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>' +
+      '</div>';
+    c.innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:20px;width:650px">' +
+        '<div style="width:298px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;align-items:flex-start">' +
+          '<div class="field-label">Dal</div>' +
+          dateFieldHTML('df1', start, openCal === 'first') +
+        '</div>' +
+        arrowSVG +
+        '<div style="width:298px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;align-items:flex-start">' +
+          '<div class="field-label">al</div>' +
+          dateFieldHTML('df2', end, openCal === 'second') +
+        '</div>' +
+      '</div>';
+  }
+  // Re-attach click listeners — stopPropagation evita che renderFields() (chiamata dentro
+  // toggleCal) distacchi l'elemento dal DOM prima che il click propaghi al document listener,
+  // che altrimenti chiamerebbe closeCal() azzerando openCal e tempSel.
+  const df1 = document.getElementById('df1');
+  if (df1) df1.addEventListener('click', (e) => { e.stopPropagation(); toggleCal('first'); });
+  const df2 = document.getElementById('df2');
+  if (df2) df2.addEventListener('click', (e) => { e.stopPropagation(); toggleCal('second'); });
+}
+
+function dateFieldHTML(id, date, focused) {
+  const txt   = date ? fmtLong(date) : '00 Month YYYY';
+  const empty = date ? '' : ' empty';
+  return (
+    '<div class="date-field' + (focused ? ' focused' : '') + '" id="' + id + '">' +
+      '<span class="date-field-text' + empty + '">' + txt + '</span>' +
+      '<div class="post-tab">' +
+        '<svg width="20" height="20" viewBox="0 0 20 20" fill="none">' +
+          '<rect x="2.5" y="3.75" width="15" height="13.333" rx="1.5" stroke="currentColor" stroke-width="1.25"/>' +
+          '<path d="M2.5 7.5h15M6.667 1.667v3.333M13.333 1.667v3.333" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>' +
+        '</svg>' +
+        '<svg class="chevron" style="' + (focused ? 'transform:rotate(180deg);' : '') + '" width="16" height="16" viewBox="0 0 16 16" fill="none">' +
+          '<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+/* ─── CALENDAR TOGGLE ─── */
+function toggleCal(which) {
+  // secondo click sullo stesso campo → chiudi
+  if (openCal === which) { closeCal(); return; }
+
+  openCal = which;
+
+  // Legge la data corrente del campo per pre-selezionarla nel calendario
+  const cur = which === 'first'
+    ? (mode === 'singolo' ? sel : start)
+    : end;
+
+  // tempSel = data già nel campo (default selection all'apertura)
+  tempSel = cur ? new Date(cur) : null;
+
+  // Se tempSel è fuori range rispetto all'altro campo, la azzeriamo
+  if (mode === 'intervallo' && tempSel) {
+    if (which === 'first' && end && tempSel >= end)   tempSel = null;
+    if (which === 'second' && start && tempSel <= start) tempSel = null;
+  }
+
+  // Naviga al mese della data nel campo (o al mese corrente se vuoto)
+  if (cur) {
+    calYear  = cur.getFullYear();
+    calMonth = cur.getMonth();
+  } else {
+    const n = new Date();
+    calYear  = n.getFullYear();
+    calMonth = n.getMonth();
+  }
+
+  renderFields(); // aggiorna stato focused sul campo
+  renderCal();
+  positionCal(which);
+}
+
+function positionCal(which) {
+  const cal   = document.getElementById('cal');
+  const popup = document.getElementById('popup');
+  const field = document.getElementById(which === 'first' ? 'df1' : 'df2');
+  if (!field) return;
+
+  // y: Figma specifica top=262.75px dal bordo superiore del popup
+  // Per il secondo campo (intervallo) ricalcolo dinamicamente solo la x
+  const pr   = popup.getBoundingClientRect();
+  const fr   = field.getBoundingClientRect();
+  const top  = 262.75;                        // Figma: y fisso
+  let   left = fr.left - pr.left;             // allineato con il campo
+  // Clamp orizzontale: il calendario (360px) non sfora il popup (698px)
+  const maxLeft = pr.width - 360;
+  left = Math.max(0, Math.min(left, maxLeft));
+
+  cal.style.top     = top  + 'px';
+  cal.style.left    = left + 'px';
+  cal.style.display = 'flex';
+}
+
+function closeCal() {
+  openCal = null;
+  tempSel = null;
+  yearPickerOpen = false;
+  // Reset year picker DOM
+  const mbtn   = document.getElementById('cal-month-btn');
+  const yc     = document.getElementById('year-container');
+  const cg     = document.getElementById('cal-grid');
+  const cnav   = document.querySelector('.cal-nav');
+  const footer = document.getElementById('cal-footer');
+  if (mbtn)   mbtn.classList.remove('year-open');
+  if (yc)     yc.style.display  = 'none';
+  if (cg)     cg.style.display  = 'flex';
+  if (cnav)   cnav.style.display = 'flex';
+  if (footer) footer.classList.remove('year-mode');
+  document.getElementById('cal').style.display = 'none';
+  renderFields();
+}
+
+// Chiudi → chiude senza modificare il campo
+function cancelCal() { closeCal(); }
+
+// Conferma → applica la selezione al campo e chiude
+function confirmCal() {
+  // Se tempSel è null ma oggi appare selezionato visivamente, usa oggi come fallback
+  if (!tempSel) tempSel = new Date(TODAY);
+
+  const which = openCal; // salva prima che closeCal lo azzeri
+
+  if (which === 'first') {
+    if (mode === 'singolo') {
+      sel = new Date(tempSel);
+    } else {
+      start = new Date(tempSel);
+      if (end && end < start) end = null;
+    }
+  } else {
+    end = new Date(tempSel);
+    if (start && end < start) { const t = start; start = end; end = t; }
+  }
+
+  closeCal();        // aggiorna il campo via renderFields()
+  updateSummary();   // aggiorna il chip riepilogo
+}
+
+/* ─── CALENDAR RENDER ─── */
+function shiftMonth(d) {
+  calMonth += d;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCal();
+}
+
+function renderCal() {
+  document.getElementById('cal-label').textContent = MONTHS[calMonth] + ' ' + calYear;
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Day-of-week header (Sun first: D L M M G V S)
+  const hrow = mkRow();
+  ['D','L','M','M','G','V','S'].forEach(function(d) {
+    const c = document.createElement('div');
+    c.className = 'cal-head-cell';
+    c.textContent = d;
+    hrow.appendChild(c);
+  });
+  grid.appendChild(hrow);
+
+  const firstDow     = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
+  const totalRows    = Math.ceil((firstDow + daysInMonth) / 7);
+
+  // Determine effective range for range-mid highlighting
+  const rangeA = null;
+  const rangeB = tempSel;
+
+  for (let r = 0; r < totalRows; r++) {
+    const wr = mkRow();
+    for (let c = 0; c < 7; c++) {
+      const idx    = r * 7 + c;
+      const dayNum = idx - firstDow + 1;
+      const cell   = document.createElement('div');
+      cell.className = 'cal-cell';
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cal-day';
+
+      if (idx < firstDow || dayNum > daysInMonth) {
+        btn.classList.add('empty');
+        btn.textContent = '';
+      } else {
+        const thisDate = new Date(calYear, calMonth, dayNum);
+        btn.textContent = dayNum;
+
+        const isFuture = thisDate > TODAY;
+
+        // Vincoli intervallo: blocca date fuori scala rispetto all'altro campo
+        let isOutOfRange = false;
+        if (mode === 'intervallo') {
+          // Campo "Dal": non può essere uguale o successivo alla data di arrivo
+          if (openCal === 'first' && end && thisDate >= end) isOutOfRange = true;
+          // Campo "Al": non può essere uguale o precedente alla data di partenza
+          if (openCal === 'second' && start && thisDate <= start) isOutOfRange = true;
+        }
+
+        if (isFuture || isOutOfRange) {
+          btn.classList.add('future');
+        } else {
+          const isTemp  = tempSel ? sameDay(thisDate, tempSel) : sameDay(thisDate, TODAY);
+          const isStart = rangeA   && sameDay(thisDate, rangeA);
+          const isMid   = rangeA && rangeB && rangeA < rangeB
+                          && thisDate > rangeA && thisDate < rangeB;
+
+          if (isTemp && isStart) {
+            btn.classList.add('selected');
+          } else if (isStart) {
+            btn.classList.add('range-start');
+          } else if (isTemp && isMid) {
+            btn.classList.add('selected');
+          } else if (isTemp) {
+            btn.classList.add('selected');
+          } else if (isMid) {
+            btn.classList.add('range-mid');
+          }
+
+          (function(d) {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation(); // evita che il click propaghi al documento (che chiamerebbe closeCal)
+              tempSel = new Date(calYear, calMonth, d);
+              renderCal();
+            });
+          })(dayNum);
+        }
+      }
+      cell.appendChild(btn);
+      wr.appendChild(cell);
+    }
+    grid.appendChild(wr);
+  }
+}
+
+function mkRow() {
+  const r = document.createElement('div');
+  r.className = 'cal-row';
+  return r;
+}
+
+/* ─── TIME HELPERS ─── */
+function getTimeVal(hId, mId) {
+  const h = (document.getElementById(hId)?.value || '0').replace(/\D/g,'');
+  const m = (document.getElementById(mId)?.value || '0').replace(/\D/g,'');
+  return String(Math.min(parseInt(h)||0, 23)).padStart(2,'0') + ':' +
+         String(Math.min(parseInt(m)||0, 59)).padStart(2,'0');
+}
+
+function initTimeInputs() {
+
+  function showTimeError(el) {
+    const field = el.closest('.time-field');
+    if (!field) return;
+    field.querySelector('.time-input-wrap').classList.add('error');
+    const sub = field.querySelector('.field-subtext');
+    if (sub) { sub.textContent = 'Formato non valido, es. 14:30'; sub.classList.add('error'); }
+  }
+
+  function clearTimeError(el) {
+    const field = el.closest('.time-field');
+    if (!field) return;
+    field.querySelector('.time-input-wrap').classList.remove('error');
+    const sub = field.querySelector('.field-subtext');
+    if (sub) { sub.textContent = 'Formato hh:mm'; sub.classList.remove('error'); }
+  }
+
+  // Configura un singolo campo (ore o minuti)
+  function setupPart(el, max, nextEl, prevEl) {
+    el.addEventListener('keydown', function(e) {
+      // Backspace su campo vuoto → torna al precedente
+      if (e.key === 'Backspace' && prevEl && this.value === '') {
+        e.preventDefault();
+        prevEl.focus();
+        return;
+      }
+      // Primo tasto stampabile → svuota il campo prima che il carattere venga inserito
+      if (this._fresh && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        this.value = '';
+        this._fresh = false;
+      }
+      // Tasti di controllo → cancella errore ed esce dallo stato fresh
+      if (['Backspace','Delete','Tab','ArrowLeft','ArrowRight'].includes(e.key)) {
+        clearTimeError(el);
+        this._fresh = false;
+      }
+    });
+    el.addEventListener('input', function() {
+      if (/\D/.test(this.value)) {
+        showTimeError(el);
+        return;
+      }
+      clearTimeError(el);
+      this.value = this.value.slice(0, 2);
+      const v = parseInt(this.value) || 0;
+      const autoAdvance = this.value.length === 2 || (this.value.length === 1 && v > Math.floor(max / 10));
+      if (autoAdvance && nextEl) {
+        nextEl.focus();
+      }
+      updateSummary();
+    });
+    el.addEventListener('blur', function() {
+      this._fresh = false;
+      const n = parseInt(this.value.replace(/\D/g,'')) || 0;
+      this.value = String(Math.min(n, max)).padStart(2,'0');
+      clearTimeError(el);
+      updateSummary();
+      // Se il focus esce dalla sezione oraria → controlla e inverte se necessario
+      setTimeout(function() {
+        const active = document.activeElement;
+        const timeIds = ['time-from-h','time-from-m','time-to-h','time-to-m'];
+        if (!timeIds.includes(active && active.id)) checkAndSwapTimes();
+      }, 0);
+    });
+    el.addEventListener('focus', function() {
+      this._fresh = true;          // al prossimo tasto svuota
+      this.setSelectionRange(0, 0); // cursore a inizio → appare |23
+    });
+  }
+
+  function setupPair(hId, mId) {
+    const hEl = document.getElementById(hId);
+    const mEl = document.getElementById(mId);
+    setupPart(hEl, 23, mEl, null);
+    setupPart(mEl, 59, null, hEl);
+  }
+
+  setupPair('time-from-h', 'time-from-m');
+  setupPair('time-to-h',   'time-to-m');
+}
+initTimeInputs();
+
+/* ─── TIME SWAP ─── */
+function checkAndSwapTimes() {
+  const fH = document.getElementById('time-from-h');
+  const fM = document.getElementById('time-from-m');
+  const tH = document.getElementById('time-to-h');
+  const tM = document.getElementById('time-to-m');
+  if (!fH || !fM || !tH || !tM) return;
+
+  const fromMin = parseInt(fH.value) * 60 + parseInt(fM.value);
+  const toMin   = parseInt(tH.value) * 60 + parseInt(tM.value);
+
+  if (toMin < fromMin) {
+    const tmpH = fH.value, tmpM = fM.value;
+    fH.value = tH.value; fM.value = tM.value;
+    tH.value = tmpH;     tM.value = tmpM;
+    updateSummary();
+  }
+}
+
+/* ─── SUMMARY ─── */
+function updateSummary() {
+  const tf = getTimeVal('time-from-h', 'time-from-m');
+  const tt = getTimeVal('time-to-h',   'time-to-m');
+  const timeDefault = (tf === DEFAULT_FROM && tt === DEFAULT_TO);
+
+  // ── data attualmente selezionata ──
+  let selLabel;
+  let dateChanged;
+
+  if (mode === 'singolo') {
+    const d = sel || TODAY;
+    selLabel    = fmtMed(d);
+    dateChanged = !sameDay(d, TODAY);
+  } else {
+    if (start && end) {
+      selLabel    = fmtMed(start) + ' – ' + fmtMed(end);
+      dateChanged = true;
+    } else if (start) {
+      selLabel    = fmtMed(start) + ' – …';
+      dateChanged = !sameDay(start, TODAY);
+    } else {
+      selLabel    = fmtMed(TODAY);
+      dateChanged = false;
+    }
+  }
+
+  const hasChange = dateChanged || !timeDefault;
+  const el = document.getElementById('riepilogo');
+
+  // Helper: HTML di una singola chip
+  function chip(dateStr, timeStr) {
+    return '<div class="chip">' +
+      '<span class="chip-text">' + dateStr + '</span>' +
+      '<div class="chip-sep"></div>' +
+      '<span class="chip-text">' + timeStr + '</span>' +
+    '</div>';
+  }
+
+  // Freccia → tra le due chip (stile Figma)
+  const arrow =
+    '<div class="chip-arrow">' +
+      '<svg width="14" height="14" viewBox="0 0 14 14" fill="none">' +
+        '<path d="M1 7h12M8 2l5 5-5 5" stroke="#9ca4a1" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>' +
+    '</div>';
+
+  if (!hasChange) {
+    // Nessuna modifica: chip singola con il filtro attivo oggi
+    el.innerHTML = chip(fmtMed(TODAY), tf + ' – ' + tt);
+  } else {
+    // Modifica: [filtro attuale] → [nuova selezione]
+    el.innerHTML =
+      chip(fmtMed(TODAY), DEFAULT_FROM + ' – ' + DEFAULT_TO) +
+      arrow +
+      chip(selLabel, tf + ' – ' + tt);
+  }
+}
+
+/* ─── RESET / SAVE / CLOSE ─── */
+function resetAll() {
+  // Azzera → torna al giorno attivo della dashboard (oggi)
+  sel   = new Date(TODAY);
+  end   = new Date(TODAY);
+  start = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - 1);
+  closeCal();
+  document.getElementById('time-from-h').value = '00';
+  document.getElementById('time-from-m').value = '00';
+  document.getElementById('time-to-h').value   = '23';
+  document.getElementById('time-to-m').value   = '59';
+  renderFields();
+  updateSummary();
+}
+
+function salva() {
+  closeCal();
+  // Costruisce il testo della snackbar dalle variabili di stato
+  let dateLabel;
+  if (mode === 'singolo') {
+    dateLabel = fmtSnack(sel || TODAY);
+  } else {
+    dateLabel = fmtSnack(start || TODAY) + ' - ' + fmtSnack(end || TODAY);
+  }
+  const tf = getTimeVal('time-from-h', 'time-from-m');
+  const tt = getTimeVal('time-to-h',   'time-to-m');
+  showSnackbar('Filtri impostati per: ' + dateLabel + '  I  ' + tf + ' - ' + tt);
+}
+
+function closePopup() {
+  document.getElementById('popup').style.display = 'none';
+}
+
+function showSnackbar(msg) {
+  clearTimeout(window._snackTimer);
+  document.getElementById('snackbar-text').textContent = msg;
+  document.getElementById('snackbar').classList.add('show');
+  window._snackTimer = setTimeout(hideSnackbar, 5000);
+}
+
+function hideSnackbar() {
+  clearTimeout(window._snackTimer);
+  document.getElementById('snackbar').classList.remove('show');
+}
+
+function fmtSnack(d) {
+  return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+}
+
+/* ─── YEAR PICKER ─── */
+function toggleYearPicker() {
+  yearPickerOpen = !yearPickerOpen;
+  const mbtn   = document.getElementById('cal-month-btn');
+  const yc     = document.getElementById('year-container');
+  const cg     = document.getElementById('cal-grid');
+  const cnav   = document.querySelector('.cal-nav');
+  const footer = document.getElementById('cal-footer');
+
+  if (yearPickerOpen) {
+    mbtn.classList.add('year-open');
+    yc.style.display  = 'flex';
+    cg.style.display  = 'none';
+    cnav.style.display = 'none';
+    footer.classList.add('year-mode');
+    renderYearGrid();
+    // Scrolla fino all'anno selezionato
+    setTimeout(function() {
+      const sel = yc.querySelector('.year-btn.selected');
+      if (sel) sel.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }, 0);
+  } else {
+    mbtn.classList.remove('year-open');
+    yc.style.display  = 'none';
+    cg.style.display  = 'flex';
+    cnav.style.display = 'flex';
+    footer.classList.remove('year-mode');
+  }
+}
+
+function renderYearGrid() {
+  const grid = document.getElementById('year-grid');
+  grid.innerHTML = '';
+
+  // Range: da 12 anni fa all'anno corrente (solo anni passati + oggi)
+  const endY   = TODAY.getFullYear();
+  const startY = endY - 12;
+  const years  = [];
+  for (let y = startY; y <= endY; y++) years.push(y);
+  // Padding a multiplo di 3
+  while (years.length % 3 !== 0) years.push(null);
+
+  for (let i = 0; i < years.length; i += 3) {
+    const row = document.createElement('div');
+    row.className = 'year-row';
+    for (let j = 0; j < 3; j++) {
+      const y   = years[i + j];
+      const btn = document.createElement('button');
+      btn.type  = 'button';
+      btn.className = 'year-btn' + (y === calYear ? ' selected' : '');
+      btn.textContent = y !== null ? y : '';
+      btn.disabled = (y === null);
+      if (y !== null) {
+        (function(yr) {
+          btn.addEventListener('click', function() {
+            calYear = yr;
+
+            // Aggiorna tempSel al nuovo anno mantenendo mese e giorno correnti,
+            // clampando al numero di giorni del mese e non oltre TODAY
+            const month = calMonth;
+            const day   = tempSel ? tempSel.getDate() : 1;
+            const maxDay = new Date(yr, month + 1, 0).getDate(); // giorni nel mese
+            const newDate = new Date(yr, month, Math.min(day, maxDay));
+            tempSel = newDate > TODAY ? null : newDate;
+
+            // Chiude year picker, mostra calendario
+            yearPickerOpen = false;
+            document.getElementById('cal-month-btn').classList.remove('year-open');
+            document.getElementById('year-container').style.display = 'none';
+            document.getElementById('cal-grid').style.display = 'flex';
+            document.querySelector('.cal-nav').style.display = 'flex';
+            document.getElementById('cal-footer').classList.remove('year-mode');
+            renderCal();
+          });
+        })(y);
+      }
+      row.appendChild(btn);
+    }
+    grid.appendChild(row);
+  }
+}
+
+/* ─── CLICK OUTSIDE ─── */
+document.addEventListener('click', function(e) {
+  if (!openCal) return;
+  const cal = document.getElementById('cal');
+  const df1 = document.getElementById('df1');
+  const df2 = document.getElementById('df2');
+  if (cal && cal.contains(e.target)) return;
+  if (df1 && df1.contains(e.target)) return;
+  if (df2 && df2.contains(e.target)) return;
+  closeCal();
+});
+
+/* ─── UTILS ─── */
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth()    === b.getMonth()    &&
+         a.getDate()     === b.getDate();
+}
+function fmtLong(d) {
+  return String(d.getDate()).padStart(2,'0') + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+}
+// Formato medio per le chip: "14 Mag 2026"
+function fmtMed(d) {
+  return d.getDate() + ' ' + SHORT_MON[d.getMonth()] + ' ' + d.getFullYear();
+}
+function fmtShort(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth() + 1).padStart(2,'0') + '/' +
+         String(d.getFullYear()).slice(-2);
+}
+</script>
+</body>
+</html>
